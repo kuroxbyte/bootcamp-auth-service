@@ -1,0 +1,155 @@
+openapi: 3.0.3
+info:
+  title: Auth Service API
+  description: |
+    Registro de usuarios de clientes del banco y emisión de tokens JWT.
+    Los endpoints son públicos. El token se firma con RS256; el API Gateway lo valida y envía a los
+    microservicios el header X-Customer-Id tomado del claim sub.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8085
+    description: Local
+tags:
+  - name: Auth
+    description: Registro e inicio de sesión
+paths:
+  /api/v1/auth/register:
+    post:
+      tags: [Auth]
+      operationId: register
+      summary: Registrar el usuario de un cliente
+      description: |
+        El cliente debe existir: auth-service lo conoce por el evento CustomerCreated de
+        customer-service (si se acaba de crear, puede tardar unos segundos en estar disponible).
+        Cada cliente tiene un solo usuario y cada nombre de usuario es único.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Usuario registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      operationId: login
+      summary: Iniciar sesión y obtener un token JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Token de acceso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [customerId, username, password]
+      properties:
+        customerId:
+          type: string
+          description: Id del cliente en customer-service
+          example: 6650f1c2a4b5c6d7e8f90123
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          example: ana.torres
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 72
+          description: Entre 8 y 72 caracteres (límite de BCrypt)
+          example: Secreta123
+    RegisterResponse:
+      type: object
+      required: [customerId, username]
+      properties:
+        customerId:
+          type: string
+        username:
+          type: string
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          example: ana.torres
+        password:
+          type: string
+          format: password
+          example: Secreta123
+    TokenResponse:
+      type: object
+      required: [accessToken, tokenType, expiresIn]
+      properties:
+        accessToken:
+          type: string
+          description: JWT firmado con RS256; claims sub (id del cliente), preferred_username, roles, iss, iat y exp
+        tokenType:
+          type: string
+          example: Bearer
+        expiresIn:
+          type: integer
+          format: int64
+          description: Segundos de validez del token
+          example: 3600
+    Problem:
+      type: object
+      description: Detalle de error (RFC 7807)
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+  responses:
+    BadRequest:
+      description: Datos de entrada inválidos
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unauthorized:
+      description: Usuario o contraseña incorrectos
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    BusinessRuleViolation:
+      description: Se incumple una regla de negocio (cliente desconocido, cliente con usuario o nombre de usuario en uso)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'

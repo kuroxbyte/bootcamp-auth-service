@@ -1,0 +1,36 @@
+# Configuración de las pruebas: no se consulta config-server.
+spring:
+  application:
+    name: auth-service
+  cloud:
+    config:
+      enabled: false
+    compatibility-verifier:
+      enabled: false
+  mongodb:
+    uri: mongodb://localhost:27017/auth_test_db
+  kafka:
+    bootstrap-servers: localhost:9092
+    listener:
+      # Las pruebas no se conectan a un broker; el consumidor se prueba directamente.
+      auto-startup: false
+
+eureka:
+  client:
+    # Las pruebas no se registran en Eureka.
+    enabled: false
+
+messaging:
+  topics:
+    customer-events: customer-events
+
+cache:
+  customers:
+    ttl: 10m
+
+# Claves RSA solo para las pruebas (distintas de las de config-repo).
+jwt:
+  issuer: bank-auth-service
+  expiration: 1h
+  private-key: MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCfM0clXUIivEHAi8OXvI8RwQyq1Bp1HDcbgvbpFpaK/dmHn4Aa3lhMWa9/W2Cw0G2UGuiOt4SEOtq0dY3oxLIysvuUjlPKrXkVXfv23pxzf0e6MkTVAJQ+XeJ1MD9LMpsB72FTz055ECwCkuKJ8PCK9/ddE0NfxqWt+uhhfya5MF2HJzGxQXZYGa2HLpyhi5xH6uoqspZ0L48pviNlfZiPLc/eBfyOHvyCT4H2mntPYPS9XWTu+NFRKmD41hXPvovyjjKQAF7btkITpwh6XqpnuHRdMcu/sgorYJSYGWNDRdMjQsxFyJTTwpiY40VwCgHSOFeTc9Sg59jav02Fm2dfAgMBAAECggEAC8RSgeR+uuqHQaAS+Ogq+vj14rqCqh1HxXTMozXUMrnIlkmnwlSk2h/W5ObwIqGFN+k1Pzc5SDzBZY06y/Wd5jlsdvJ+JwDjbjzgHsMddTv3JUAJ7mR4kJOH5XmHdBttcZsr6nHsLu6PEjGhJOj2Ho9tbSe7VxzrqgxdmLc5OX7Hu/z7WjDOFUtPITJImoMpxAP5wmTXO6t19xhSS3MBy8HwNbH3LOBAbV6C4CkmiLMVutotCxbgGm5Yn6tdXMCFTh1mV7ihKQTdOhkoN5bvux92G9QxYKkgAACQhMqfS2ONA2S9IJ4+x6ySvtDGYENkjpGukT/45xYw9qrTExqLYQKBgQDaMcgNB/Hm+Rim4Ior6Cs/GgnZW/PnPLUEf5V2p+9ukNI1FwSQtkpPCVt/o0bTlZ22X5AP4S40RlWB2VxrPyUAWl3LsO9jgguBpL6ls6J3qgfiRI64foQ8Gx7Y+T1/LdlUje4XiOTJwUJqo2+FEvskxVgusU9+2QGIXhux6HJwMwKBgQC6yMF6G+D8VxvZzvG3ScWblZUUsuolXB5/iXuuBVxrl2wYXZ2YuFz1eQJe/Kc5s8IO6VP/KRDW5Uj6SVUKUiN6VQiioxWWATJZU7kfTTo50dCjQbzNPNGaACku+Ik7EoZ5kMyKLPZtiLR6Tg1ffU7fe71uRw4GWIrHCM43u7oQJQKBgBA9kFRX+QtmEw2ovOATwdRKjd0d2QOnIxoYnPld+pZSNTM6aV6UEufbHHJdptHs2vZOGpzz98pwScEGeriI1Ko4D68vlkHj1hNqPb57pmYdw8R1seHNmO4YXq1rr8YdlYWTotshl1XlCpqBW7Wd+g98mNmw3OfmIxURXCJb2Ni9AoGAIbGBJTPOO/bCsWGhPLz0BoLPJ7K2hhK99aepRdT1vPrNpv+MJDZtnmI7yUKuL7x7bxEr88VGol0t8ugzjO8QM0sPibb9d9eza2Ws6TaXIEL27dw34JXuAWeyBiUTLDLFSzyRiQNfWJbmZ4GY6/bAuZOqsi/jGcXzEsBF4svcXnkCgYA2wapUdxowZvSBuwgHrIWMKSIC4PYsjMtfFI17YrKMrolbZnTqsOguPnZwk/obOJKl7OfvCUs+aupghIOA9YoN/0YlsrTKqQJa2AMTuTjyhisIwZblrf/W0x+QbbWoOLULHV1J8NHvFZIDoxg148jFoOFVRF50xmSKeAdqqVUgdw==
+  public-key: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnzNHJV1CIrxBwIvDl7yPEcEMqtQadRw3G4L26RaWiv3Zh5+AGt5YTFmvf1tgsNBtlBrojreEhDratHWN6MSyMrL7lI5Tyq15FV379t6cc39HujJE1QCUPl3idTA/SzKbAe9hU89OeRAsApLiifDwivf3XRNDX8alrfroYX8muTBdhycxsUF2WBmthy6coYucR+rqKrKWdC+PKb4jZX2Yjy3P3gX8jh78gk+B9pp7T2D0vV1k7vjRUSpg+NYVz76L8o4ykABe27ZCE6cIel6qZ7h0XTHLv7IKK2CUmBljQ0XTI0LMRciU08KYmONFcAoB0jhXk3PUoOfY2r9NhZtnXwIDAQAB
