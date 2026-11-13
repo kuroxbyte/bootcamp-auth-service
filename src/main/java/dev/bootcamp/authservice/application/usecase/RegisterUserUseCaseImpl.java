@@ -8,26 +8,16 @@ import dev.bootcamp.authservice.domain.model.user.UserAccount;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Implementación de {@link RegisterUserUseCase}.
  */
+@RequiredArgsConstructor
 public class RegisterUserUseCaseImpl implements RegisterUserUseCase {
     private final CustomerRepository customerRepository;
     private final UserAccountRepository userAccountRepository;
     private final PasswordHasher passwordHasher;
-
-    /**
-     * Crea el caso de uso con los adaptadores de sus puertos.
-     */
-    public RegisterUserUseCaseImpl(
-            CustomerRepository customerRepository,
-            UserAccountRepository userAccountRepository,
-            PasswordHasher passwordHasher) {
-        this.customerRepository = customerRepository;
-        this.userAccountRepository = userAccountRepository;
-        this.passwordHasher = passwordHasher;
-    }
 
     @Override
     public Single<UserAccount> execute(String customerId, String username, String password) {

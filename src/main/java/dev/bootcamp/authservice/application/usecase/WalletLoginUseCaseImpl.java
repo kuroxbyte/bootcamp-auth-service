@@ -7,26 +7,16 @@ import dev.bootcamp.authservice.domain.exception.InvalidCredentialsException;
 import dev.bootcamp.authservice.domain.model.user.AccessToken;
 import dev.bootcamp.authservice.domain.model.user.Role;
 import io.reactivex.rxjava3.core.Single;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Implementación de {@link WalletLoginUseCase}.
  */
+@RequiredArgsConstructor
 public class WalletLoginUseCaseImpl implements WalletLoginUseCase {
     private final WalletUserRepository walletUserRepository;
     private final PasswordHasher passwordHasher;
     private final TokenIssuer tokenIssuer;
-
-    /**
-     * Crea el caso de uso con los adaptadores de sus puertos.
-     */
-    public WalletLoginUseCaseImpl(
-            WalletUserRepository walletUserRepository,
-            PasswordHasher passwordHasher,
-            TokenIssuer tokenIssuer) {
-        this.walletUserRepository = walletUserRepository;
-        this.passwordHasher = passwordHasher;
-        this.tokenIssuer = tokenIssuer;
-    }
 
     @Override
     public Single<AccessToken> execute(String phone, String password) {
