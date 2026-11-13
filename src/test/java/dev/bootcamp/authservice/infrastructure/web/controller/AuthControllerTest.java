@@ -2,10 +2,13 @@ package dev.bootcamp.authservice.infrastructure.web.controller;
 
 import dev.bootcamp.authservice.application.usecase.LoginUseCase;
 import dev.bootcamp.authservice.application.usecase.RegisterUserUseCase;
+import dev.bootcamp.authservice.application.usecase.RegisterWalletUserUseCase;
+import dev.bootcamp.authservice.application.usecase.WalletLoginUseCase;
 import dev.bootcamp.authservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.authservice.domain.exception.InvalidCredentialsException;
 import dev.bootcamp.authservice.domain.model.user.AccessToken;
 import dev.bootcamp.authservice.domain.model.user.UserAccount;
+import dev.bootcamp.authservice.domain.model.user.WalletUser;
 import io.reactivex.rxjava3.core.Single;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +35,10 @@ class AuthControllerTest {
     @MockitoBean private RegisterUserUseCase registerUserUseCase;
 
     @MockitoBean private LoginUseCase loginUseCase;
+
+    @MockitoBean private RegisterWalletUserUseCase registerWalletUserUseCase;
+
+    @MockitoBean private WalletLoginUseCase walletLoginUseCase;
 
     private WebTestClient.ResponseSpec post(String path, String body) {
         return webTestClient.post()
@@ -126,5 +133,34 @@ class AuthControllerTest {
                 .expectBody()
                 .jsonPath("$.detail")
                 .isEqualTo("Ocurrió un error inesperado");
+    }
+
+    @Test
+    void registersWalletUserAndLogsInWithThePhone() {
+        String body = "{\"phone\":\"987654321\",\"password\":\"Secreta123\"}";
+        when(registerWalletUserUseCase.execute("987654321", "Secreta123"))
+                .thenReturn(Single.just(new WalletUser("u1", "w1", "987654321", "hash")));
+        when(walletLoginUseCase.execute("987654321", "Secreta123"))
+                .thenReturn(Single.just(new AccessToken("jwt", 3600)))
+                .thenReturn(Single.error(new InvalidCredentialsException()));
+
+        post("/api/v1/auth/wallet-users", body)
+                .expectStatus()
+                .isCreated()
+                .expectBody()
+                .jsonPath("$.walletId")
+                .isEqualTo("w1")
+                .jsonPath("$.passwordHash")
+                .doesNotExist();
+        post("/api/v1/auth/wallet-login", body)
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.accessToken")
+                .isEqualTo("jwt");
+        post("/api/v1/auth/wallet-login", body).expectStatus().isUnauthorized();
+        post("/api/v1/auth/wallet-users", "{\"phone\":\"987654321\",\"password\":\"corta\"}")
+                .expectStatus()
+                .isBadRequest();
     }
 }

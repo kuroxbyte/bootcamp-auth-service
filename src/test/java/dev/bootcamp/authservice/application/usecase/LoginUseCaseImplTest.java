@@ -5,6 +5,7 @@ import dev.bootcamp.authservice.application.port.TokenIssuer;
 import dev.bootcamp.authservice.application.port.UserAccountRepository;
 import dev.bootcamp.authservice.domain.exception.InvalidCredentialsException;
 import dev.bootcamp.authservice.domain.model.user.AccessToken;
+import dev.bootcamp.authservice.domain.model.user.Role;
 import dev.bootcamp.authservice.domain.model.user.UserAccount;
 import io.reactivex.rxjava3.core.Maybe;
 import org.junit.jupiter.api.Test;
@@ -36,7 +37,7 @@ class LoginUseCaseImplTest {
         AccessToken token = new AccessToken("jwt", 3600);
         when(userAccountRepository.findByUsername("ana")).thenReturn(Maybe.just(USER));
         when(passwordHasher.matches("Secreta123", "hash")).thenReturn(true);
-        when(tokenIssuer.issue(USER)).thenReturn(token);
+        when(tokenIssuer.issue("c1", "ana", Role.CUSTOMER)).thenReturn(token);
 
         useCase.execute("ana", "Secreta123").test().assertValue(token);
     }
@@ -47,7 +48,7 @@ class LoginUseCaseImplTest {
         when(passwordHasher.matches("mala", "hash")).thenReturn(false);
 
         useCase.execute("ana", "mala").test().assertError(InvalidCredentialsException.class);
-        verify(tokenIssuer, never()).issue(any());
+        verify(tokenIssuer, never()).issue(any(), any(), any());
     }
 
     @Test

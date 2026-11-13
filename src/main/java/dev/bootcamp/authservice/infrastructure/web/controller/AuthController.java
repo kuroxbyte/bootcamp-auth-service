@@ -2,11 +2,16 @@ package dev.bootcamp.authservice.infrastructure.web.controller;
 
 import dev.bootcamp.authservice.application.usecase.LoginUseCase;
 import dev.bootcamp.authservice.application.usecase.RegisterUserUseCase;
+import dev.bootcamp.authservice.application.usecase.RegisterWalletUserUseCase;
+import dev.bootcamp.authservice.application.usecase.WalletLoginUseCase;
 import dev.bootcamp.authservice.infrastructure.web.api.AuthApi;
 import dev.bootcamp.authservice.infrastructure.web.dto.LoginRequestDto;
 import dev.bootcamp.authservice.infrastructure.web.dto.RegisterRequestDto;
 import dev.bootcamp.authservice.infrastructure.web.dto.RegisterResponseDto;
 import dev.bootcamp.authservice.infrastructure.web.dto.TokenResponseDto;
+import dev.bootcamp.authservice.infrastructure.web.dto.WalletLoginRequestDto;
+import dev.bootcamp.authservice.infrastructure.web.dto.WalletUserRequestDto;
+import dev.bootcamp.authservice.infrastructure.web.dto.WalletUserResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -16,7 +21,8 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 /**
- * Endpoints de registro e inicio de sesión definidos en el contrato OpenAPI.
+ * Endpoints de registro e inicio de sesión de clientes y de monederos Yanki definidos en el
+ * contrato OpenAPI.
  */
 @Slf4j
 @RestController
@@ -27,6 +33,8 @@ public class AuthController implements AuthApi {
 
     private final RegisterUserUseCase registerUserUseCase;
     private final LoginUseCase loginUseCase;
+    private final RegisterWalletUserUseCase registerWalletUserUseCase;
+    private final WalletLoginUseCase walletLoginUseCase;
 
     @Override
     public Mono<ResponseEntity<RegisterResponseDto>> register(
@@ -54,6 +62,31 @@ public class AuthController implements AuthApi {
         return loginRequestDto
                 .flatMap(request -> Mono.from(loginUseCase
                         .execute(request.getUsername(), request.getPassword())
+                        .toFlowable()))
+                .map(token -> ResponseEntity.ok(
+                        new TokenResponseDto(token.value(), BEARER, token.expiresIn())));
+    }
+
+    @Override
+    public Mono<ResponseEntity<WalletUserResponseDto>> registerWalletUser(
+            Mono<WalletUserRequestDto> walletUserRequestDto,
+            ServerWebExchange exchange) {
+        return walletUserRequestDto
+                .flatMap(request -> Mono.from(registerWalletUserUseCase
+                        .execute(request.getPhone(), request.getPassword())
+                        .toFlowable()))
+                .doOnNext(user -> log.info("Wallet user registered walletId={}", user.walletId()))
+                .map(user -> ResponseEntity.status(HttpStatus.CREATED)
+                        .body(new WalletUserResponseDto(user.walletId(), user.phone())));
+    }
+
+    @Override
+    public Mono<ResponseEntity<TokenResponseDto>> walletLogin(
+            Mono<WalletLoginRequestDto> walletLoginRequestDto,
+            ServerWebExchange exchange) {
+        return walletLoginRequestDto
+                .flatMap(request -> Mono.from(walletLoginUseCase
+                        .execute(request.getPhone(), request.getPassword())
                         .toFlowable()))
                 .map(token -> ResponseEntity.ok(
                         new TokenResponseDto(token.value(), BEARER, token.expiresIn())));
