@@ -21,9 +21,12 @@ eureka:
 messaging:
   topics:
     customer-events: customer-events
+    yanki-events: yanki-events
 
 cache:
   customers:
+    ttl: 10m
+  wallets:
     ttl: 10m
 
 # Claves RSA solo para las pruebas (distintas de las de config-repo).

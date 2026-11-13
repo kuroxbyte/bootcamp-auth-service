@@ -2,7 +2,7 @@ package dev.bootcamp.authservice.infrastructure.security;
 
 import dev.bootcamp.authservice.application.port.TokenIssuer;
 import dev.bootcamp.authservice.domain.model.user.AccessToken;
-import dev.bootcamp.authservice.domain.model.user.UserAccount;
+import dev.bootcamp.authservice.domain.model.user.Role;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
@@ -19,13 +19,12 @@ import java.util.List;
 /**
  * Implementa el puerto {@link TokenIssuer} con JWT firmados con RS256.
  *
- * <p>Claims: {@code iss}, {@code sub} (id del cliente), {@code preferred_username},
- * {@code roles} ({@code CUSTOMER}), {@code iat} y {@code exp}.
+ * <p>Claims: {@code iss}, {@code sub} (id del cliente o del monedero), {@code preferred_username}
+ * (nombre de usuario o celular), {@code roles} ({@code CUSTOMER} o {@code WALLET}), {@code iat} y
+ * {@code exp}.
  */
 @Component
 public class JwtTokenIssuer implements TokenIssuer {
-
-    private static final List<String> ROLES = List.of("CUSTOMER");
 
     private final JwtEncoder jwtEncoder;
     private final Clock clock;
@@ -47,15 +46,15 @@ public class JwtTokenIssuer implements TokenIssuer {
     }
 
     @Override
-    public AccessToken issue(UserAccount userAccount) {
+    public AccessToken issue(String subject, String username, Role role) {
         Instant now = Instant.now(clock);
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer(issuer)
-                .subject(userAccount.customerId())
+                .subject(subject)
                 .issuedAt(now)
                 .expiresAt(now.plus(expiration))
-                .claim("preferred_username", userAccount.username())
-                .claim("roles", ROLES)
+                .claim("preferred_username", username)
+                .claim("roles", List.of(role.name()))
                 .build();
         JwsHeader header = JwsHeader.with(SignatureAlgorithm.RS256).build();
         String token = jwtEncoder

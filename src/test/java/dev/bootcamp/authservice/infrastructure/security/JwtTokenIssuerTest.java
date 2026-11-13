@@ -1,7 +1,7 @@
 package dev.bootcamp.authservice.infrastructure.security;
 
 import dev.bootcamp.authservice.domain.model.user.AccessToken;
-import dev.bootcamp.authservice.domain.model.user.UserAccount;
+import dev.bootcamp.authservice.domain.model.user.Role;
 import dev.bootcamp.authservice.infrastructure.config.JwtConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,7 @@ class JwtTokenIssuerTest {
 
     @Test
     void issuesSignedTokenWithCustomerAsSubject() throws Exception {
-        AccessToken token = tokenIssuer.issue(new UserAccount("u1", "c1", "ana", "hash"));
+        AccessToken token = tokenIssuer.issue("c1", "ana", Role.CUSTOMER);
 
         RSAPublicKey key = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(
                 new X509EncodedKeySpec(Base64.getDecoder().decode(publicKey)));
@@ -43,5 +43,18 @@ class JwtTokenIssuerTest {
         assertThat(Duration.between(jwt.getIssuedAt(), jwt.getExpiresAt()))
                 .isEqualTo(Duration.ofHours(1));
         assertThat(jwt.getHeaders()).containsEntry("alg", "RS256");
+    }
+
+    @Test
+    void issuesWalletTokenWithWalletAsSubjectAndWalletRole() throws Exception {
+        AccessToken token = tokenIssuer.issue("w1", "987654321", Role.WALLET);
+
+        RSAPublicKey key = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(
+                new X509EncodedKeySpec(Base64.getDecoder().decode(publicKey)));
+        Jwt jwt = NimbusJwtDecoder.withPublicKey(key).build().decode(token.value());
+
+        assertThat(jwt.getSubject()).isEqualTo("w1");
+        assertThat(jwt.getClaimAsString("preferred_username")).isEqualTo("987654321");
+        assertThat(jwt.getClaimAsStringList("roles")).isEqualTo(List.of("WALLET"));
     }
 }

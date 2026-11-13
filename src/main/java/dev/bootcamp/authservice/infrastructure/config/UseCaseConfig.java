@@ -4,12 +4,20 @@ import dev.bootcamp.authservice.application.port.CustomerRepository;
 import dev.bootcamp.authservice.application.port.PasswordHasher;
 import dev.bootcamp.authservice.application.port.TokenIssuer;
 import dev.bootcamp.authservice.application.port.UserAccountRepository;
+import dev.bootcamp.authservice.application.port.WalletRepository;
+import dev.bootcamp.authservice.application.port.WalletUserRepository;
 import dev.bootcamp.authservice.application.usecase.LoginUseCase;
 import dev.bootcamp.authservice.application.usecase.LoginUseCaseImpl;
 import dev.bootcamp.authservice.application.usecase.RegisterUserUseCase;
 import dev.bootcamp.authservice.application.usecase.RegisterUserUseCaseImpl;
+import dev.bootcamp.authservice.application.usecase.RegisterWalletUserUseCase;
+import dev.bootcamp.authservice.application.usecase.RegisterWalletUserUseCaseImpl;
 import dev.bootcamp.authservice.application.usecase.SaveCustomerUseCase;
 import dev.bootcamp.authservice.application.usecase.SaveCustomerUseCaseImpl;
+import dev.bootcamp.authservice.application.usecase.SaveWalletUseCase;
+import dev.bootcamp.authservice.application.usecase.SaveWalletUseCaseImpl;
+import dev.bootcamp.authservice.application.usecase.WalletLoginUseCase;
+import dev.bootcamp.authservice.application.usecase.WalletLoginUseCaseImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -51,5 +59,38 @@ public class UseCaseConfig {
             PasswordHasher passwordHasher,
             TokenIssuer tokenIssuer) {
         return new LoginUseCaseImpl(userAccountRepository, passwordHasher, tokenIssuer);
+    }
+
+    /**
+     * Registra el caso de uso {@link SaveWalletUseCase}.
+     */
+    @Bean
+    public SaveWalletUseCase saveWalletUseCase(WalletRepository walletRepository) {
+        return new SaveWalletUseCaseImpl(walletRepository);
+    }
+
+    /**
+     * Registra el caso de uso {@link RegisterWalletUserUseCase}.
+     */
+    @Bean
+    public RegisterWalletUserUseCase registerWalletUserUseCase(
+            WalletRepository walletRepository,
+            WalletUserRepository walletUserRepository,
+            PasswordHasher passwordHasher) {
+        return new RegisterWalletUserUseCaseImpl(
+                walletRepository,
+                walletUserRepository,
+                passwordHasher);
+    }
+
+    /**
+     * Registra el caso de uso {@link WalletLoginUseCase}.
+     */
+    @Bean
+    public WalletLoginUseCase walletLoginUseCase(
+            WalletUserRepository walletUserRepository,
+            PasswordHasher passwordHasher,
+            TokenIssuer tokenIssuer) {
+        return new WalletLoginUseCaseImpl(walletUserRepository, passwordHasher, tokenIssuer);
     }
 }

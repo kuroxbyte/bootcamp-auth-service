@@ -61,8 +61,90 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /api/v1/auth/wallet-users:
+    post:
+      tags: [Auth]
+      operationId: registerWalletUser
+      summary: Registrar el acceso de un monedero Yanki
+      description: |
+        El monedero debe existir: auth-service lo conoce por el evento WalletCreated de
+        yanki-service (si se acaba de crear, puede tardar unos segundos en estar disponible).
+        Cada monedero tiene un solo acceso; se inicia sesión con el celular.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WalletUserRequest'
+      responses:
+        '201':
+          description: Acceso registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletUserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+  /api/v1/auth/wallet-login:
+    post:
+      tags: [Auth]
+      operationId: walletLogin
+      summary: Iniciar sesión con el monedero y obtener un token JWT
+      description: El token lleva el rol WALLET y solo sirve para las rutas de Yanki.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WalletLoginRequest'
+      responses:
+        '200':
+          description: Token de acceso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 components:
   schemas:
+    WalletUserRequest:
+      type: object
+      required: [phone, password]
+      properties:
+        phone:
+          type: string
+          example: '987654321'
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 72
+          description: Entre 8 y 72 caracteres (límite de BCrypt)
+          example: Secreta123
+    WalletUserResponse:
+      type: object
+      required: [walletId, phone]
+      properties:
+        walletId:
+          type: string
+        phone:
+          type: string
+    WalletLoginRequest:
+      type: object
+      required: [phone, password]
+      properties:
+        phone:
+          type: string
+          example: '987654321'
+        password:
+          type: string
+          format: password
+          example: Secreta123
     RegisterRequest:
       type: object
       required: [customerId, username, password]
@@ -108,7 +190,7 @@ components:
       properties:
         accessToken:
           type: string
-          description: JWT firmado con RS256; claims sub (id del cliente), preferred_username, roles, iss, iat y exp
+          description: JWT firmado con RS256; claims sub (id del cliente o del monedero), preferred_username (usuario o celular), roles (CUSTOMER o WALLET), iss, iat y exp
         tokenType:
           type: string
           example: Bearer
@@ -142,13 +224,13 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
     Unauthorized:
-      description: Usuario o contraseña incorrectos
+      description: Usuario (o celular) o contraseña incorrectos
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
     BusinessRuleViolation:
-      description: Se incumple una regla de negocio (cliente desconocido, cliente con usuario o nombre de usuario en uso)
+      description: Se incumple una regla de negocio (cliente o monedero desconocido, con acceso ya registrado o nombre de usuario en uso)
       content:
         application/problem+json:
           schema:

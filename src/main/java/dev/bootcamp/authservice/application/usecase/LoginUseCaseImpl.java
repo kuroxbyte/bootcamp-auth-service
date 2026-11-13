@@ -5,6 +5,7 @@ import dev.bootcamp.authservice.application.port.TokenIssuer;
 import dev.bootcamp.authservice.application.port.UserAccountRepository;
 import dev.bootcamp.authservice.domain.exception.InvalidCredentialsException;
 import dev.bootcamp.authservice.domain.model.user.AccessToken;
+import dev.bootcamp.authservice.domain.model.user.Role;
 import io.reactivex.rxjava3.core.Single;
 
 /**
@@ -33,6 +34,6 @@ public class LoginUseCaseImpl implements LoginUseCase {
                 .findByUsername(username)
                 .filter(user -> passwordHasher.matches(password, user.passwordHash()))
                 .switchIfEmpty(Single.error(InvalidCredentialsException::new))
-                .map(tokenIssuer::issue);
+                .map(user -> tokenIssuer.issue(user.customerId(), user.username(), Role.CUSTOMER));
     }
 }

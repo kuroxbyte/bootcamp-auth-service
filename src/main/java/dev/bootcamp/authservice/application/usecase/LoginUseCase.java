@@ -8,7 +8,8 @@ import io.reactivex.rxjava3.core.Single;
  * Caso de uso para iniciar sesión con usuario y contraseña.
  *
  * <p>Si las credenciales son correctas emite un token JWT cuyo claim {@code sub} es el id del
- * cliente. Es reactivo: no hace nada hasta que se suscribe al {@link Single}.
+ * cliente, con el rol {@code CUSTOMER}. Es reactivo: no hace nada hasta que se suscribe al
+ * {@link Single}.
  */
 public interface LoginUseCase {
 

@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
  * <ul>
  *   <li>400: datos de entrada inválidos; lo resuelve {@link ResponseEntityExceptionHandler}.
  *   <li>401: {@link InvalidCredentialsException}.
- *   <li>422: {@link BusinessRuleException}, o un usuario duplicado que detecta el índice único de
+ *   <li>422: {@link BusinessRuleException}, o un acceso duplicado que detecta un índice único de
  *       MongoDB ({@link DuplicateKeyException}) cuando dos registros llegan a la vez.
  *   <li>500: cualquier otro error inesperado.
  * </ul>
@@ -58,7 +58,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return problem(
                 HttpStatus.UNPROCESSABLE_CONTENT,
                 "Regla de negocio incumplida",
-                "El cliente ya tiene un usuario o el nombre de usuario ya está en uso");
+                "El cliente o monedero ya tiene un acceso o el nombre de usuario ya está en uso");
     }
 
     /**
