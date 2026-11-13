@@ -9,26 +9,16 @@ import dev.bootcamp.authservice.domain.model.user.WalletUser;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Implementación de {@link RegisterWalletUserUseCase}.
  */
+@RequiredArgsConstructor
 public class RegisterWalletUserUseCaseImpl implements RegisterWalletUserUseCase {
     private final WalletRepository walletRepository;
     private final WalletUserRepository walletUserRepository;
     private final PasswordHasher passwordHasher;
-
-    /**
-     * Crea el caso de uso con los adaptadores de sus puertos.
-     */
-    public RegisterWalletUserUseCaseImpl(
-            WalletRepository walletRepository,
-            WalletUserRepository walletUserRepository,
-            PasswordHasher passwordHasher) {
-        this.walletRepository = walletRepository;
-        this.walletUserRepository = walletUserRepository;
-        this.passwordHasher = passwordHasher;
-    }
 
     @Override
     public Single<WalletUser> execute(String phone, String password) {

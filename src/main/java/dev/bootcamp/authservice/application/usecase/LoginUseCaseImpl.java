@@ -7,26 +7,16 @@ import dev.bootcamp.authservice.domain.exception.InvalidCredentialsException;
 import dev.bootcamp.authservice.domain.model.user.AccessToken;
 import dev.bootcamp.authservice.domain.model.user.Role;
 import io.reactivex.rxjava3.core.Single;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Implementación de {@link LoginUseCase}.
  */
+@RequiredArgsConstructor
 public class LoginUseCaseImpl implements LoginUseCase {
     private final UserAccountRepository userAccountRepository;
     private final PasswordHasher passwordHasher;
     private final TokenIssuer tokenIssuer;
-
-    /**
-     * Crea el caso de uso con los adaptadores de sus puertos.
-     */
-    public LoginUseCaseImpl(
-            UserAccountRepository userAccountRepository,
-            PasswordHasher passwordHasher,
-            TokenIssuer tokenIssuer) {
-        this.userAccountRepository = userAccountRepository;
-        this.passwordHasher = passwordHasher;
-        this.tokenIssuer = tokenIssuer;
-    }
 
     @Override
     public Single<AccessToken> execute(String username, String password) {
