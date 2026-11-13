@@ -8,6 +8,8 @@ import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mongodb.MongoDBContainer;
@@ -17,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers
-@DataMongoTest(properties = "spring.data.mongodb.auto-index-creation=true")
+@DataMongoTest
 @Import(UserAccountPersistenceAdapter.class)
 class UserAccountPersistenceAdapterTest {
 
@@ -27,9 +29,17 @@ class UserAccountPersistenceAdapterTest {
 
     @Autowired private UserAccountMongoRepository mongoRepository;
 
+    @Autowired private ReactiveMongoTemplate mongoTemplate;
+
     @BeforeEach
-    void cleanCollection() {
+    void cleanCollectionAndCreateIndexes() {
         mongoRepository.deleteAll().block();
+        // La creación automática de índices es asíncrona: se crean aquí para probarlos.
+        new MongoPersistentEntityIndexResolver(mongoTemplate.getConverter().getMappingContext())
+                .resolveIndexFor(UserAccountDocument.class)
+                .forEach(index -> mongoTemplate.indexOps(UserAccountDocument.class)
+                        .createIndex(index)
+                        .block());
     }
 
     @Test
