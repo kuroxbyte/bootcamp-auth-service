@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -40,7 +41,8 @@ class CachedWalletRepositoryTest {
 
     @BeforeEach
     void createRepository() {
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        // Las pruebas de borrado no usan opsForValue().
+        lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         repository = new CachedWalletRepository(
                 mongoRepository,
                 redisTemplate,
@@ -82,5 +84,24 @@ class CachedWalletRepositoryTest {
 
         repository.findByPhone("987654321").test().assertValue(WALLET);
         repository.findByPhone("987654321").test().assertValue(WALLET);
+    }
+
+    @Test
+    void deletesFromMongoAndEvictsThePhoneKey() {
+        when(mongoRepository.deleteById("w1")).thenReturn(Mono.empty());
+        when(redisTemplate.delete("wallet:987654321")).thenReturn(Mono.just(1L));
+
+        repository.delete(WALLET).test().awaitDone(1, TimeUnit.SECONDS).assertComplete();
+
+        verify(mongoRepository).deleteById("w1");
+    }
+
+    @Test
+    void deletesEvenWhenRedisFails() {
+        when(mongoRepository.deleteById("w1")).thenReturn(Mono.empty());
+        when(redisTemplate.delete("wallet:987654321"))
+                .thenReturn(Mono.error(new IllegalStateException("redis down")));
+
+        repository.delete(WALLET).test().awaitDone(1, TimeUnit.SECONDS).assertComplete();
     }
 }

@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -43,7 +44,8 @@ class CachedCustomerRepositoryTest {
 
     @BeforeEach
     void createRepository() {
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        // Las pruebas de borrado no usan opsForValue().
+        lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         repository = new CachedCustomerRepository(mongoRepository, redisTemplate, jsonMapper, TTL);
     }
 
@@ -100,5 +102,25 @@ class CachedCustomerRepositoryTest {
         when(mongoRepository.findById("c9")).thenReturn(Mono.empty());
 
         repository.findById("c9").test().assertNoValues().assertComplete();
+    }
+
+    @Test
+    void deletesFromMongoAndEvictsTheCache() {
+        when(mongoRepository.deleteById("c1")).thenReturn(Mono.empty());
+        when(redisTemplate.delete("customer:c1")).thenReturn(Mono.just(1L));
+
+        repository.deleteById("c1").test().awaitDone(1, TimeUnit.SECONDS).assertComplete();
+
+        verify(mongoRepository).deleteById("c1");
+        verify(redisTemplate).delete("customer:c1");
+    }
+
+    @Test
+    void deletesEvenWhenRedisFails() {
+        when(mongoRepository.deleteById("c1")).thenReturn(Mono.empty());
+        when(redisTemplate.delete("customer:c1"))
+                .thenReturn(Mono.error(new IllegalStateException("redis down")));
+
+        repository.deleteById("c1").test().awaitDone(1, TimeUnit.SECONDS).assertComplete();
     }
 }

@@ -1,6 +1,7 @@
 package dev.bootcamp.authservice.application.port;
 
 import dev.bootcamp.authservice.domain.model.user.WalletUser;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
 
@@ -25,4 +26,9 @@ public interface WalletUserRepository {
      * Guarda el acceso y lo emite con su id asignado.
      */
     Single<WalletUser> save(WalletUser walletUser);
+
+    /**
+     * Elimina el acceso del monedero; no falla si no tiene.
+     */
+    Completable deleteByWalletId(String walletId);
 }

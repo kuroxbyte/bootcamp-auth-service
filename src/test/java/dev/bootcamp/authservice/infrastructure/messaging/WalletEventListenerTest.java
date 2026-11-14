@@ -1,5 +1,6 @@
 package dev.bootcamp.authservice.infrastructure.messaging;
 
+import dev.bootcamp.authservice.application.usecase.CloseAccessUseCase;
 import dev.bootcamp.authservice.application.usecase.SaveWalletUseCase;
 import dev.bootcamp.authservice.domain.model.wallet.Wallet;
 import io.reactivex.rxjava3.core.Completable;
@@ -20,11 +21,14 @@ class WalletEventListenerTest {
 
     @Mock private SaveWalletUseCase saveWalletUseCase;
 
+    @Mock private CloseAccessUseCase closeAccessUseCase;
+
     private WalletEventListener listener;
 
     @BeforeEach
     void createListener() {
-        listener = new WalletEventListener(saveWalletUseCase, JsonMapper.builder().build());
+        listener = new WalletEventListener(
+                saveWalletUseCase, closeAccessUseCase, JsonMapper.builder().build());
     }
 
     @Test
@@ -41,6 +45,18 @@ class WalletEventListenerTest {
     void ignoresUnknownEventTypes() {
         listener.onWalletEvent("{\"eventType\":\"WalletDeleted\",\"walletId\":\"w1\"}");
 
+        verify(saveWalletUseCase, never()).execute(any());
+    }
+
+    @Test
+    void closesAccessOfWalletClosedEvent() {
+        Wallet wallet = new Wallet("w1", "987654321");
+        when(closeAccessUseCase.closeWallet(wallet)).thenReturn(Completable.complete());
+
+        listener.onWalletEvent("{\"eventType\":\"WalletClosed\",\"walletId\":\"w1\","
+                + "\"phone\":\"987654321\"}");
+
+        verify(closeAccessUseCase).closeWallet(wallet);
         verify(saveWalletUseCase, never()).execute(any());
     }
 }

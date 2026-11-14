@@ -66,4 +66,14 @@ class WalletUserPersistenceAdapterTest {
                 .awaitDone(5, TimeUnit.SECONDS)
                 .assertError(DuplicateKeyException.class);
     }
+
+    @Test
+    void deletesTheAccessOfTheWallet() {
+        adapter.save(new WalletUser(null, "w1", "987654321", "hash")).blockingGet();
+
+        adapter.deleteByWalletId("w1").blockingAwait();
+
+        adapter.existsByPhone("987654321").test().awaitDone(5, TimeUnit.SECONDS)
+                .assertValue(false);
+    }
 }

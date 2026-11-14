@@ -18,4 +18,9 @@ public interface WalletUserMongoRepository
      * Indica si el celular ya tiene un acceso.
      */
     Mono<Boolean> existsByPhone(String phone);
+
+    /**
+     * Elimina el acceso del monedero.
+     */
+    Mono<Void> deleteByWalletId(String walletId);
 }

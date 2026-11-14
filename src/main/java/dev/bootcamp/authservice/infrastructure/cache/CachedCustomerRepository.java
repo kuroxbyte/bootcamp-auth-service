@@ -69,6 +69,17 @@ public class CachedCustomerRepository implements CustomerRepository {
         return Maybe.fromPublisher(cached(customerId).switchIfEmpty(fromDatabase));
     }
 
+    @Override
+    public Completable deleteById(String customerId) {
+        Mono<Void> evict = redisTemplate.delete(KEY_PREFIX + customerId)
+                .then()
+                .onErrorResume(error -> {
+                    log.warn("Redis delete failed customerId={}", customerId, error);
+                    return Mono.empty();
+                });
+        return Completable.fromPublisher(mongoRepository.deleteById(customerId).then(evict));
+    }
+
     private Mono<Customer> cached(String customerId) {
         return redisTemplate.opsForValue()
                 .get(KEY_PREFIX + customerId)

@@ -66,6 +66,17 @@ public class CachedWalletRepository implements WalletRepository {
         return Maybe.fromPublisher(cached(phone).switchIfEmpty(fromDatabase));
     }
 
+    @Override
+    public Completable delete(Wallet wallet) {
+        Mono<Void> evict = redisTemplate.delete(KEY_PREFIX + wallet.phone())
+                .then()
+                .onErrorResume(error -> {
+                    log.warn("Redis delete failed walletId={}", wallet.id(), error);
+                    return Mono.empty();
+                });
+        return Completable.fromPublisher(mongoRepository.deleteById(wallet.id()).then(evict));
+    }
+
     private Mono<Wallet> cached(String phone) {
         return redisTemplate.opsForValue()
                 .get(KEY_PREFIX + phone)

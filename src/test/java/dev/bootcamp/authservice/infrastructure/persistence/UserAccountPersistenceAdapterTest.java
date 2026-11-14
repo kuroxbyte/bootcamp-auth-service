@@ -73,4 +73,14 @@ class UserAccountPersistenceAdapterTest {
                 .awaitDone(5, TimeUnit.SECONDS)
                 .assertError(DuplicateKeyException.class);
     }
+
+    @Test
+    void deletesTheUserOfTheCustomer() {
+        adapter.save(new UserAccount(null, "c1", "ana", "hash")).blockingGet();
+
+        adapter.deleteByCustomerId("c1").blockingAwait();
+        adapter.deleteByCustomerId("nadie").blockingAwait();
+
+        adapter.existsByCustomerId("c1").test().awaitDone(5, TimeUnit.SECONDS).assertValue(false);
+    }
 }

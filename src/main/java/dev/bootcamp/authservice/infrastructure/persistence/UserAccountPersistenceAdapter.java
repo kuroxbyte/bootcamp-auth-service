@@ -2,6 +2,7 @@ package dev.bootcamp.authservice.infrastructure.persistence;
 
 import dev.bootcamp.authservice.application.port.UserAccountRepository;
 import dev.bootcamp.authservice.domain.model.user.UserAccount;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,11 @@ public class UserAccountPersistenceAdapter implements UserAccountRepository {
                         userAccount.username(),
                         userAccount.passwordHash())))
                 .map(UserAccountPersistenceAdapter::toDomain);
+    }
+
+    @Override
+    public Completable deleteByCustomerId(String customerId) {
+        return Completable.fromPublisher(mongoRepository.deleteByCustomerId(customerId));
     }
 
     private static UserAccount toDomain(UserAccountDocument document) {

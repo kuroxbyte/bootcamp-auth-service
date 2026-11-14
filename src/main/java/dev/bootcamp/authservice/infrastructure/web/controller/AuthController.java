@@ -1,10 +1,12 @@
 package dev.bootcamp.authservice.infrastructure.web.controller;
 
+import dev.bootcamp.authservice.application.usecase.AdminLoginUseCase;
 import dev.bootcamp.authservice.application.usecase.LoginUseCase;
 import dev.bootcamp.authservice.application.usecase.RegisterUserUseCase;
 import dev.bootcamp.authservice.application.usecase.RegisterWalletUserUseCase;
 import dev.bootcamp.authservice.application.usecase.WalletLoginUseCase;
 import dev.bootcamp.authservice.infrastructure.web.api.AuthApi;
+import dev.bootcamp.authservice.infrastructure.web.dto.AdminLoginRequestDto;
 import dev.bootcamp.authservice.infrastructure.web.dto.LoginRequestDto;
 import dev.bootcamp.authservice.infrastructure.web.dto.RegisterRequestDto;
 import dev.bootcamp.authservice.infrastructure.web.dto.RegisterResponseDto;
@@ -21,8 +23,8 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 /**
- * Endpoints de registro e inicio de sesión de clientes y de monederos Yanki definidos en el
- * contrato OpenAPI.
+ * Endpoints de registro e inicio de sesión de clientes, de monederos Yanki y del administrador
+ * definidos en el contrato OpenAPI.
  */
 @Slf4j
 @RestController
@@ -35,6 +37,7 @@ public class AuthController implements AuthApi {
     private final LoginUseCase loginUseCase;
     private final RegisterWalletUserUseCase registerWalletUserUseCase;
     private final WalletLoginUseCase walletLoginUseCase;
+    private final AdminLoginUseCase adminLoginUseCase;
 
     @Override
     public Mono<ResponseEntity<RegisterResponseDto>> register(
@@ -78,6 +81,19 @@ public class AuthController implements AuthApi {
                 .doOnNext(user -> log.info("Wallet user registered walletId={}", user.walletId()))
                 .map(user -> ResponseEntity.status(HttpStatus.CREATED)
                         .body(new WalletUserResponseDto(user.walletId(), user.phone())));
+    }
+
+    @Override
+    public Mono<ResponseEntity<TokenResponseDto>> adminLogin(
+            Mono<AdminLoginRequestDto> adminLoginRequestDto,
+            ServerWebExchange exchange) {
+        return adminLoginRequestDto
+                .flatMap(request -> Mono.from(adminLoginUseCase
+                        .execute(request.getUsername(), request.getPassword())
+                        .toFlowable()))
+                .doOnNext(token -> log.info("Admin logged in"))
+                .map(token -> ResponseEntity.ok(
+                        new TokenResponseDto(token.value(), BEARER, token.expiresIn())));
     }
 
     @Override

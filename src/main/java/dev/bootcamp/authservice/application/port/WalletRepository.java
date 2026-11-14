@@ -20,4 +20,9 @@ public interface WalletRepository {
      * @return el monedero, o vacío si auth-service todavía no lo conoce
      */
     Maybe<Wallet> findByPhone(String phone);
+
+    /**
+     * Quita el monedero de la copia local (y de la caché); no falla si no existe.
+     */
+    Completable delete(Wallet wallet);
 }

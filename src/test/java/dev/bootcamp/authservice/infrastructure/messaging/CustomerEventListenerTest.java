@@ -1,5 +1,6 @@
 package dev.bootcamp.authservice.infrastructure.messaging;
 
+import dev.bootcamp.authservice.application.usecase.CloseAccessUseCase;
 import dev.bootcamp.authservice.application.usecase.SaveCustomerUseCase;
 import dev.bootcamp.authservice.domain.model.customer.Customer;
 import io.reactivex.rxjava3.core.Completable;
@@ -20,11 +21,14 @@ class CustomerEventListenerTest {
 
     @Mock private SaveCustomerUseCase saveCustomerUseCase;
 
+    @Mock private CloseAccessUseCase closeAccessUseCase;
+
     private CustomerEventListener listener;
 
     @BeforeEach
     void createListener() {
-        listener = new CustomerEventListener(saveCustomerUseCase, JsonMapper.builder().build());
+        listener = new CustomerEventListener(
+                saveCustomerUseCase, closeAccessUseCase, JsonMapper.builder().build());
     }
 
     @Test
@@ -42,6 +46,26 @@ class CustomerEventListenerTest {
     void ignoresUnknownEventTypes() {
         listener.onCustomerEvent("{\"eventType\":\"CustomerDeleted\",\"customerId\":\"c1\"}");
 
+        verify(saveCustomerUseCase, never()).execute(any());
+    }
+
+    @Test
+    void replacesCustomerOfCustomerUpdatedEvent() {
+        when(saveCustomerUseCase.execute(any())).thenReturn(Completable.complete());
+
+        listener.onCustomerEvent("{\"eventType\":\"CustomerUpdated\",\"customerId\":\"c1\","
+                + "\"type\":\"PERSONAL\",\"profile\":\"VIP\"}");
+
+        verify(saveCustomerUseCase).execute(new Customer("c1", "PERSONAL", "VIP"));
+    }
+
+    @Test
+    void closesAccessOfCustomerClosedEvent() {
+        when(closeAccessUseCase.closeCustomer("c1")).thenReturn(Completable.complete());
+
+        listener.onCustomerEvent("{\"eventType\":\"CustomerClosed\",\"customerId\":\"c1\"}");
+
+        verify(closeAccessUseCase).closeCustomer("c1");
         verify(saveCustomerUseCase, never()).execute(any());
     }
 }
