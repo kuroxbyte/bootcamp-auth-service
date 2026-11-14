@@ -16,10 +16,12 @@ import io.reactivex.rxjava3.core.Single;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -53,12 +55,20 @@ class WalletUserUseCasesTest {
     }
 
     @Test
-    void savesWalletInTheLocalCopy() {
-        Wallet wallet = new Wallet("w1", PHONE);
+    void savesWalletAfterRemovingTheClosedWalletWithTheSamePhone() {
+        Wallet wallet = new Wallet("w2", PHONE);
+        when(walletUserRepository.deleteByPhoneAndOtherWallet(PHONE, "w2"))
+                .thenReturn(Completable.complete());
+        when(walletRepository.deleteOtherWithPhone(wallet)).thenReturn(Completable.complete());
         when(walletRepository.save(wallet)).thenReturn(Completable.complete());
 
-        new SaveWalletUseCaseImpl(walletRepository).execute(wallet).test().assertComplete();
-        verify(walletRepository).save(wallet);
+        new SaveWalletUseCaseImpl(walletRepository, walletUserRepository).execute(wallet).test()
+                .assertComplete();
+
+        InOrder order = inOrder(walletUserRepository, walletRepository);
+        order.verify(walletUserRepository).deleteByPhoneAndOtherWallet(PHONE, "w2");
+        order.verify(walletRepository).deleteOtherWithPhone(wallet);
+        order.verify(walletRepository).save(wallet);
     }
 
     @Test

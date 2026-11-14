@@ -25,4 +25,10 @@ public interface WalletRepository {
      * Quita el monedero de la copia local (y de la caché); no falla si no existe.
      */
     Completable delete(Wallet wallet);
+
+    /**
+     * Quita la copia de otro monedero con el mismo celular (uno dado de baja cuyo celular se
+     * reutilizó); no falla si no hay.
+     */
+    Completable deleteOtherWithPhone(Wallet wallet);
 }

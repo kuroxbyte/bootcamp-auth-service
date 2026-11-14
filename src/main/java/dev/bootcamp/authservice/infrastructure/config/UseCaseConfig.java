@@ -99,8 +99,10 @@ public class UseCaseConfig {
      * Registra el caso de uso {@link SaveWalletUseCase}.
      */
     @Bean
-    public SaveWalletUseCase saveWalletUseCase(WalletRepository walletRepository) {
-        return new SaveWalletUseCaseImpl(walletRepository);
+    public SaveWalletUseCase saveWalletUseCase(
+            WalletRepository walletRepository,
+            WalletUserRepository walletUserRepository) {
+        return new SaveWalletUseCaseImpl(walletRepository, walletUserRepository);
     }
 
     /**

@@ -77,6 +77,13 @@ public class CachedWalletRepository implements WalletRepository {
         return Completable.fromPublisher(mongoRepository.deleteById(wallet.id()).then(evict));
     }
 
+    // La entrada de caché es por celular: guardar el monedero nuevo la reemplaza.
+    @Override
+    public Completable deleteOtherWithPhone(Wallet wallet) {
+        return Completable.fromPublisher(
+                mongoRepository.deleteByPhoneAndIdNot(wallet.phone(), wallet.id()));
+    }
+
     private Mono<Wallet> cached(String phone) {
         return redisTemplate.opsForValue()
                 .get(KEY_PREFIX + phone)

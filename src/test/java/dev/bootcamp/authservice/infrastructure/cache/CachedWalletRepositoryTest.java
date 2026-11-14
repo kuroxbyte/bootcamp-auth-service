@@ -104,4 +104,14 @@ class CachedWalletRepositoryTest {
 
         repository.delete(WALLET).test().awaitDone(1, TimeUnit.SECONDS).assertComplete();
     }
+
+    @Test
+    void deletesTheCopyOfAnotherWalletWithThePhone() {
+        when(mongoRepository.deleteByPhoneAndIdNot("987654321", "w1")).thenReturn(Mono.empty());
+
+        repository.deleteOtherWithPhone(WALLET).test().awaitDone(1, TimeUnit.SECONDS)
+                .assertComplete();
+
+        verify(mongoRepository).deleteByPhoneAndIdNot("987654321", "w1");
+    }
 }
