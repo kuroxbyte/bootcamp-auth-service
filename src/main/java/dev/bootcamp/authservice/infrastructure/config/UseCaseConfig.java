@@ -6,6 +6,10 @@ import dev.bootcamp.authservice.application.port.TokenIssuer;
 import dev.bootcamp.authservice.application.port.UserAccountRepository;
 import dev.bootcamp.authservice.application.port.WalletRepository;
 import dev.bootcamp.authservice.application.port.WalletUserRepository;
+import dev.bootcamp.authservice.application.usecase.AdminLoginUseCase;
+import dev.bootcamp.authservice.application.usecase.AdminLoginUseCaseImpl;
+import dev.bootcamp.authservice.application.usecase.CloseAccessUseCase;
+import dev.bootcamp.authservice.application.usecase.CloseAccessUseCaseImpl;
 import dev.bootcamp.authservice.application.usecase.LoginUseCase;
 import dev.bootcamp.authservice.application.usecase.LoginUseCaseImpl;
 import dev.bootcamp.authservice.application.usecase.RegisterUserUseCase;
@@ -18,6 +22,7 @@ import dev.bootcamp.authservice.application.usecase.SaveWalletUseCase;
 import dev.bootcamp.authservice.application.usecase.SaveWalletUseCaseImpl;
 import dev.bootcamp.authservice.application.usecase.WalletLoginUseCase;
 import dev.bootcamp.authservice.application.usecase.WalletLoginUseCaseImpl;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -59,6 +64,35 @@ public class UseCaseConfig {
             PasswordHasher passwordHasher,
             TokenIssuer tokenIssuer) {
         return new LoginUseCaseImpl(userAccountRepository, passwordHasher, tokenIssuer);
+    }
+
+    /**
+     * Registra el caso de uso {@link AdminLoginUseCase} con el administrador configurado en
+     * {@code auth.admin}.
+     */
+    @Bean
+    public AdminLoginUseCase adminLoginUseCase(
+            @Value("${auth.admin.username}") String username,
+            @Value("${auth.admin.password-hash}") String passwordHash,
+            PasswordHasher passwordHasher,
+            TokenIssuer tokenIssuer) {
+        return new AdminLoginUseCaseImpl(username, passwordHash, passwordHasher, tokenIssuer);
+    }
+
+    /**
+     * Registra el caso de uso {@link CloseAccessUseCase}.
+     */
+    @Bean
+    public CloseAccessUseCase closeAccessUseCase(
+            CustomerRepository customerRepository,
+            UserAccountRepository userAccountRepository,
+            WalletRepository walletRepository,
+            WalletUserRepository walletUserRepository) {
+        return new CloseAccessUseCaseImpl(
+                customerRepository,
+                userAccountRepository,
+                walletRepository,
+                walletUserRepository);
     }
 
     /**

@@ -11,7 +11,7 @@ public interface TokenIssuer {
     /**
      * Emite un token.
      *
-     * @param subject  claim {@code sub}: id del cliente o del monedero
+     * @param subject  claim {@code sub}: id del cliente o del monedero, o usuario del empleado
      * @param username claim {@code preferred_username}: nombre de usuario o celular
      * @param role     rol del claim {@code roles}
      */

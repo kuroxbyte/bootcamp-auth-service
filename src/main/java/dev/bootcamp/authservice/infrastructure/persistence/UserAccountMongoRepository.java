@@ -23,4 +23,9 @@ public interface UserAccountMongoRepository
      * Indica si el cliente ya tiene un usuario.
      */
     Mono<Boolean> existsByCustomerId(String customerId);
+
+    /**
+     * Elimina el usuario del cliente.
+     */
+    Mono<Void> deleteByCustomerId(String customerId);
 }

@@ -1,5 +1,6 @@
 package dev.bootcamp.authservice.infrastructure.web.controller;
 
+import dev.bootcamp.authservice.application.usecase.AdminLoginUseCase;
 import dev.bootcamp.authservice.application.usecase.LoginUseCase;
 import dev.bootcamp.authservice.application.usecase.RegisterUserUseCase;
 import dev.bootcamp.authservice.application.usecase.RegisterWalletUserUseCase;
@@ -39,6 +40,8 @@ class AuthControllerTest {
     @MockitoBean private RegisterWalletUserUseCase registerWalletUserUseCase;
 
     @MockitoBean private WalletLoginUseCase walletLoginUseCase;
+
+    @MockitoBean private AdminLoginUseCase adminLoginUseCase;
 
     private WebTestClient.ResponseSpec post(String path, String body) {
         return webTestClient.post()
@@ -162,5 +165,19 @@ class AuthControllerTest {
         post("/api/v1/auth/wallet-users", "{\"phone\":\"987654321\",\"password\":\"corta\"}")
                 .expectStatus()
                 .isBadRequest();
+    }
+
+    @Test
+    void returnsBearerTokenOnAdminLoginAndUnauthorizedOnWrongPassword() {
+        when(adminLoginUseCase.execute("admin", "Admin2026!"))
+                .thenReturn(Single.just(new AccessToken("admin-jwt", 3600)));
+        when(adminLoginUseCase.execute("admin", "otra"))
+                .thenReturn(Single.error(new InvalidCredentialsException()));
+
+        post("/api/v1/auth/admin-login", "{\"username\":\"admin\",\"password\":\"Admin2026!\"}")
+                .expectStatus().isOk()
+                .expectBody().jsonPath("$.accessToken").isEqualTo("admin-jwt");
+        post("/api/v1/auth/admin-login", "{\"username\":\"admin\",\"password\":\"otra\"}")
+                .expectStatus().isUnauthorized();
     }
 }

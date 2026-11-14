@@ -12,5 +12,10 @@ public enum Role {
     /**
      * Dueño de un monedero Yanki: solo las rutas de Yanki.
      */
-    WALLET
+    WALLET,
+    /**
+     * Empleado del banco: administra clientes y productos (listar todos los clientes, modificar y
+     * dar de baja).
+     */
+    ADMIN
 }

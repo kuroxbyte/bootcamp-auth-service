@@ -2,6 +2,7 @@ package dev.bootcamp.authservice.infrastructure.persistence;
 
 import dev.bootcamp.authservice.application.port.WalletUserRepository;
 import dev.bootcamp.authservice.domain.model.user.WalletUser;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,11 @@ public class WalletUserPersistenceAdapter implements WalletUserRepository {
                         walletUser.phone(),
                         walletUser.passwordHash())))
                 .map(WalletUserPersistenceAdapter::toDomain);
+    }
+
+    @Override
+    public Completable deleteByWalletId(String walletId) {
+        return Completable.fromPublisher(mongoRepository.deleteByWalletId(walletId));
     }
 
     private static WalletUser toDomain(WalletUserDocument document) {

@@ -20,4 +20,9 @@ public interface CustomerRepository {
      * @return el cliente, o vacío si auth-service todavía no lo conoce
      */
     Maybe<Customer> findById(String customerId);
+
+    /**
+     * Quita el cliente de la copia local (y de la caché); no falla si no existe.
+     */
+    Completable deleteById(String customerId);
 }
