@@ -39,6 +39,12 @@ public class WalletUserPersistenceAdapter implements WalletUserRepository {
     }
 
     @Override
+    public Completable deleteByPhoneAndOtherWallet(String phone, String walletId) {
+        return Completable.fromPublisher(
+                mongoRepository.deleteByPhoneAndWalletIdNot(phone, walletId));
+    }
+
+    @Override
     public Completable deleteByWalletId(String walletId) {
         return Completable.fromPublisher(mongoRepository.deleteByWalletId(walletId));
     }

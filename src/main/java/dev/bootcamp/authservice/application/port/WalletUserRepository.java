@@ -31,4 +31,10 @@ public interface WalletUserRepository {
      * Elimina el acceso del monedero; no falla si no tiene.
      */
     Completable deleteByWalletId(String walletId);
+
+    /**
+     * Elimina el acceso de otro monedero con el mismo celular (uno dado de baja cuyo celular se
+     * reutilizó); no falla si no hay.
+     */
+    Completable deleteByPhoneAndOtherWallet(String phone, String walletId);
 }

@@ -23,4 +23,9 @@ public interface WalletUserMongoRepository
      * Elimina el acceso del monedero.
      */
     Mono<Void> deleteByWalletId(String walletId);
+
+    /**
+     * Elimina los accesos con ese celular de otro monedero.
+     */
+    Mono<Void> deleteByPhoneAndWalletIdNot(String phone, String walletId);
 }

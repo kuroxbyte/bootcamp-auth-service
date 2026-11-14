@@ -76,4 +76,17 @@ class WalletUserPersistenceAdapterTest {
         adapter.existsByPhone("987654321").test().awaitDone(5, TimeUnit.SECONDS)
                 .assertValue(false);
     }
+
+    @Test
+    void deletesTheAccessOfAnotherWalletWithThePhone() {
+        adapter.save(new WalletUser(null, "w1", "987654321", "hash")).blockingGet();
+
+        adapter.deleteByPhoneAndOtherWallet("987654321", "w1").blockingAwait();
+        adapter.existsByPhone("987654321").test().awaitDone(5, TimeUnit.SECONDS)
+                .assertValue(true);
+
+        adapter.deleteByPhoneAndOtherWallet("987654321", "w2").blockingAwait();
+        adapter.existsByPhone("987654321").test().awaitDone(5, TimeUnit.SECONDS)
+                .assertValue(false);
+    }
 }
